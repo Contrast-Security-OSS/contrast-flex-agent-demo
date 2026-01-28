@@ -109,14 +109,31 @@
             </div>
             <button type="submit">Search</button>
         </form>
+        
+        <div style="margin-top: 20px;">
+            <h4>💡 Try these SQL injection examples (Click to use):</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <code style="background: #f8f9fa; padding: 10px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd;" onclick="setQuery(this.textContent.trim())">john</code>
+                <code style="background: #f8f9fa; padding: 10px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd;" onclick="setQuery(this.textContent.trim())">' OR '1'='1</code>
+                <code style="background: #f8f9fa; padding: 10px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd;" onclick="setQuery(this.textContent.trim())">' OR 1=1 --</code>
+                <code style="background: #f8f9fa; padding: 10px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd;" onclick="setQuery(this.textContent.trim())">' UNION SELECT id, username, password, role FROM admin_users --</code>
+            </div>
+        </div>
     </div>
+    
+    <script>
+        function setQuery(query) {
+            document.getElementById('query').value = query;
+            document.querySelector('form').submit();
+        }
+    </script>
 
     <div class="card" th:if="${searchQuery}">
         <h3>Search Results for: "<span th:text="${searchQuery}"></span>"</h3>
-        <div th:if="${users.empty}">
+        <div th:if="${users == null || users.empty}">
             <p>No users found matching your search query.</p>
         </div>
-        <div th:unless="${users.empty}">
+        <div th:unless="${users == null || users.empty}">
             <table class="user-table">
                 <thead>
                     <tr>
@@ -136,17 +153,9 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <div class="card">
-        <h3>💡 Security Testing Examples</h3>
-        <p>Try these search queries to test SQL injection detection:</p>
-        <ul>
-            <li><code>' OR '1'='1</code> - Classic SQL injection</li>
-            <li><code>'; DROP TABLE users; --</code> - Table deletion attempt</li>
-            <li><code>' UNION SELECT 1,2,3,4 --</code> - Union-based injection</li>
-        </ul>
-        <p><em>Note: These are safe to test as the application uses an in-memory database.</em></p>
+        <div th:if="${error}" style="color: #c33; background: #fee; padding: 10px; border-radius: 5px; margin-top: 10px;">
+            <strong>Error:</strong> <span th:text="${error}"></span>
+        </div>
     </div>
 </body>
 </html>

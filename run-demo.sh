@@ -16,7 +16,7 @@ fi
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [AGENT_TOKEN]"
+    echo "Usage: $0 [OPTIONS] [AGENT_TOKEN]"
     echo ""
     echo "Setup Instructions:"
     echo "  1. Copy config template: cp config.template config.local"
@@ -24,6 +24,10 @@ show_usage() {
     echo "  3. Run this script"
     echo ""
     echo "Options:"
+    echo "  --rebuild      Force rebuild (no cache) to get latest agent version"
+    echo "  -h, --help     Show this help message"
+    echo ""
+    echo "Arguments:"
     echo "  AGENT_TOKEN    Base64 encoded Contrast agent token (optional)"
     echo ""
     echo "Environment Variables:"
@@ -31,6 +35,7 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0                                    # Use token from config.local"
+    echo "  $0 --rebuild                          # Rebuild from scratch"
     echo "  $0 <base64-token>                     # Use provided token"
     echo "  CONTRAST_AGENT_TOKEN=<token> $0       # Use environment variable"
     echo ""
@@ -42,20 +47,37 @@ show_usage() {
     exit 1
 }
 
-# Handle help option
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    show_usage
-fi
-
-# Determine which agent token to use
+# Handle options and arguments
+REBUILD=false
 AGENT_TOKEN=""
-if [ -n "$1" ]; then
-    AGENT_TOKEN="$1"
-    echo "📝 Using agent token from command line argument"
-elif [ -n "$CONTRAST_AGENT_TOKEN" ]; then
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            show_usage
+            ;;
+        --rebuild)
+            REBUILD=true
+            shift
+            ;;
+        *)
+            if [ -z "$AGENT_TOKEN" ]; then
+                AGENT_TOKEN="$1"
+                echo "📝 Using agent token from command line argument"
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Determine which agent token to use if not provided via command line
+if [ -z "$AGENT_TOKEN" ] && [ -n "$CONTRAST_AGENT_TOKEN" ]; then
     AGENT_TOKEN="$CONTRAST_AGENT_TOKEN"
     echo "📝 Using agent token from environment variable CONTRAST_AGENT_TOKEN"
-else
+fi
+
+# Validate agent token
+if [ -z "$AGENT_TOKEN" ]; then
     echo "❌ No Contrast agent token provided!"
     echo ""
     echo "To get started:"
@@ -71,12 +93,22 @@ fi
 
 echo "🐳 Building Docker image: $IMAGE_NAME"
 cd "$DEMO_DIR"
-if [ -n "$AGENT_TOKEN" ]; then
-    echo "🔧 Building with Contrast agent token..."
-    docker build --build-arg AGENT_TOKEN="$AGENT_TOKEN" -t "$IMAGE_NAME" .
+if [ "$REBUILD" = true ]; then
+    if [ -n "$AGENT_TOKEN" ]; then
+        echo "🔧 Building with Contrast agent token (forcing fresh build for latest agent)..."
+        docker build --no-cache --pull --build-arg AGENT_TOKEN="$AGENT_TOKEN" -t "$IMAGE_NAME" .
+    else
+        echo "🔧 Building without Contrast agent (forcing fresh build)..."
+        docker build --no-cache --pull -t "$IMAGE_NAME" .
+    fi
 else
-    echo "🔧 Building without Contrast agent..."
-    docker build -t "$IMAGE_NAME" .
+    if [ -n "$AGENT_TOKEN" ]; then
+        echo "🔧 Building with Contrast agent token (using cache if available)..."
+        docker build --build-arg AGENT_TOKEN="$AGENT_TOKEN" -t "$IMAGE_NAME" .
+    else
+        echo "🔧 Building without Contrast agent (using cache if available)..."
+        docker build -t "$IMAGE_NAME" .
+    fi
 fi
 cd ..
 
@@ -101,6 +133,22 @@ echo "   - http://localhost:8080 -> container:8080 (Apache Tomcat)"
 echo "   - http://localhost:8181 -> container:8181 (.NET Core)" 
 echo "   - http://localhost:9090 -> container:9090 (Python Flask)"
 echo "   - http://localhost:3030 -> container:3030 (Node.js Express)"
+echo ""
+echo "📚 Quick Reference:"
+echo ""
+echo "🎮 Demo Control Script:"
+echo "   ./demo-control.sh <app> <command>"
+echo "   Apps: python | node | netcore | tomcat | all"
+echo "   Commands: start | stop | restart | status | logs"
+echo "   Example: ./demo-control.sh tomcat start"
+echo ""
+echo "🛡️  Contrast Flex Agent:"
+echo "   contrast-flex <command>"
+echo "   Commands: agents | apps | monitor | attach | auto-attach | agent-config | config"
+echo "   Example: contrast-flex apps"
+echo ""
+echo "📖 Full details in README.md"
+echo ""
 echo "🔗 Connecting to container shell..."
 
 # Shell into the container

@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findByEmailContainingIgnoreCase(String email);
     
-    // Intentionally vulnerable query for security testing
-    @Query(value = "SELECT * FROM users WHERE name LIKE '%" + ":query" + "%' OR email LIKE '%" + ":query" + "%'", nativeQuery = true)
+    // Intentionally vulnerable query for security testing - SQL Injection vulnerability
+    @Query(value = "SELECT * FROM users WHERE name LIKE CONCAT('%', :query, '%') OR email LIKE CONCAT('%', :query, '%')", nativeQuery = true)
     List<User> findByQuery(@Param("query") String query);
 }

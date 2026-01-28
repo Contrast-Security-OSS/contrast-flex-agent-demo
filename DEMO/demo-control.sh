@@ -119,12 +119,27 @@ start_app() {
             nohup $command --urls "http://0.0.0.0:$port" > "$log_file" 2>&1 &
             ;;
         tomcat)
+            print_status $GREEN "☕ Building Java Spring Boot application..."
+            cd java-spring-boot
+            mvn clean package -DskipTests > /dev/null 2>&1
+            if [ ! -f "target/contrast-demo.war" ]; then
+                print_status $RED "❌ Maven build failed! WAR file not created."
+                exit 1
+            fi
+            print_status $GREEN "✅ WAR file built successfully"
+            
+            # Copy WAR to Tomcat webapps
+            cp target/contrast-demo.war ../apache-tomcat-9.0.95/webapps/contrast-demo.war
+            
             print_status $GREEN "☕ Starting Tomcat..."
-            cd "$directory"
+            cd ..
+            
             # Stop first if running
             ./apache-tomcat-9.0.95/bin/shutdown.sh > /dev/null 2>&1 || true
             sleep 2
-            nohup ./apache-tomcat-9.0.95/bin/startup.sh > "$log_file" 2>&1 &
+            
+            # Start Tomcat in background
+            ./apache-tomcat-9.0.95/bin/startup.sh
             ;;
     esac
     
@@ -139,26 +154,16 @@ start_app() {
     
     # Special verification for Tomcat since startup.sh exits after launching
     if [ "$app" = "tomcat" ]; then
-        # For Tomcat, check if Tomcat process is running and port is active
-        local tomcat_running=false
-        local attempts=0
-        while [ $attempts -lt 10 ]; do
-            local java_pids=$(pgrep -f "java.*tomcat" 2>/dev/null || true)
-            local port_pids=$(lsof -ti:$port 2>/dev/null || true)
-            if [ ! -z "$java_pids" ] || [ ! -z "$port_pids" ]; then
-                tomcat_running=true
-                break
-            fi
-            sleep 1
-            attempts=$((attempts + 1))
-        done
+        print_status $BLUE "⏳ Waiting for Tomcat to start..."
+        sleep 5
         
-        if [ "$tomcat_running" = true ]; then
+        # Check if catalina process is running
+        if pgrep -f "org.apache.catalina.startup.Bootstrap" > /dev/null 2>&1; then
             print_status $GREEN "✅ $app_name started successfully"
             print_status $BLUE "🌐 Access at: http://localhost:$port/contrast-demo"
         else
             print_status $RED "❌ Failed to start $app_name"
-            rm -f "$pid_file"
+            print_status $YELLOW "Check logs at: ./apache-tomcat-9.0.95/logs/catalina.out"
             return 1
         fi
     else

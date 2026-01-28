@@ -5,10 +5,13 @@ import com.contrast.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,6 +19,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private EntityManager entityManager;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -33,14 +39,17 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // Intentionally vulnerable search method for security testing
+    // Intentionally vulnerable search method - REAL SQL INJECTION
     public List<User> searchUsers(String query) {
         try {
-            // This uses the vulnerable native query in the repository
-            return userRepository.findByQuery(query);
+            // VULNERABILITY: Direct string concatenation in SQL query
+            String sql = "SELECT * FROM users WHERE name LIKE '%" + query + "%' OR email LIKE '%" + query + "%'";
+            Query nativeQuery = entityManager.createNativeQuery(sql, User.class);
+            return nativeQuery.getResultList();
         } catch (Exception e) {
-            // Fallback to safe search
-            return userRepository.findByNameContainingIgnoreCase(query);
+            // If SQL injection causes an error, return empty list
+            System.err.println("Search error: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 

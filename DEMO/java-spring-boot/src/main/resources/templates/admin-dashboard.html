@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            display: inline-block;
+        }
+        .header .user-info {
+            float: right;
+            margin-top: 5px;
+        }
+        .header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+        }
+        .header a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .warning-box {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Admin Dashboard</h1>
+        <div class="user-info">
+            <span>Welcome, <strong th:text="${username}"></strong></span>
+            <a th:href="@{/admin/sql}">SQL Tool</a>
+            <a th:href="@{/admin/debug}">Debug Info</a>
+            <a th:href="@{/admin/logout}">Logout</a>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+    
+    <div class="container">
+        <div class="warning-box">
+            <strong>⚠️ Vulnerability Demonstration</strong><br>
+            This dashboard intentionally exposes security vulnerabilities including:
+            weak authentication, SQL injection, information disclosure, and insecure session management.
+        </div>
+        
+        <div class="card">
+            <h2>📊 User Management</h2>
+            <p>Admin users with access to sensitive operations:</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Password (Plain Text!)</th>
+                        <th>Role</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td th:text="${user.username}"></td>
+                        <td th:text="${user.password}"></td>
+                        <td th:text="${user.role}"></td>
+                        <td th:text="${user.active} ? 'Yes' : 'No'"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>🛠️ Admin Tools</h2>
+            <p>Dangerous administrative tools:</p>
+            <a th:href="@{/admin/sql}" class="btn">SQL Query Tool (Injection Vulnerable)</a>
+            <a th:href="@{/admin/debug}" class="btn">Debug Information (Info Disclosure)</a>
+        </div>
+    </div>
+</body>
+</html>

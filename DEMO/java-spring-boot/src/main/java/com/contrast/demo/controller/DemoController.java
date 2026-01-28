@@ -63,10 +63,15 @@ public class DemoController {
     @GetMapping("/search")
     public String search(@RequestParam(required = false) String query, Model model) {
         if (query != null && !query.isEmpty()) {
-            // Intentionally vulnerable SQL-like search for security testing
-            List<User> users = userService.searchUsers(query);
-            model.addAttribute("users", users);
-            model.addAttribute("searchQuery", query);
+            try {
+                // Intentionally vulnerable SQL-like search for security testing
+                List<User> users = userService.searchUsers(query);
+                model.addAttribute("users", users);
+                model.addAttribute("searchQuery", query);
+            } catch (Exception e) {
+                model.addAttribute("searchQuery", query);
+                model.addAttribute("error", e.getMessage());
+            }
         }
         return "search";
     }
