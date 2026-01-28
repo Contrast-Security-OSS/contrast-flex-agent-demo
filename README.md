@@ -27,13 +27,21 @@ cd contrast-flex-agent-demo
 cp config.template config.local
 
 # Edit config.local and add your token
-# Get your token from: Contrast TeamServer -> Organization Settings -> Agent
+# Get your token from: Contrast UI -> Organization Settings -> Agent Keys
 nano config.local  # or use your preferred editor
 ```
 
 3. **Start the demo:**
 ```bash
 ./run-demo.sh
+```
+
+**Options:**
+```bash
+./run-demo.sh                    # Fast: uses Docker cache if available
+./run-demo.sh --rebuild          # Slow: forces fresh build, gets latest agent version
+./run-demo.sh <token>            # Provide agent token directly as argument
+./run-demo.sh --rebuild <token>  # Combine rebuild with custom token
 ```
 
 **Alternative: If you need to set permissions first (rare):**
@@ -46,6 +54,8 @@ That's it! The script will:
 2. Start all applications with proper port forwarding  
 3. Connect you to the container shell
 4. Make all scripts executable automatically
+
+**💡 Tip:** Use `--rebuild` when you want to ensure you have the absolute latest version of the Contrast Flex Agent. The default (without `--rebuild`) is faster and recommended for regular use.
 
 ### Security Note
 - Your personal configuration (`config.local`) is automatically git-ignored
@@ -185,14 +195,15 @@ Test with payloads like:
 Usage: contrast-flex [OPTIONS] <COMMAND>
 
 Commands:
-  app             List discovered application details
-  app-agent       Set agent versions pinned to specific applications
-  monitor         Monitors running applications
-  auto-attach     Display or set the auto-attach status
-  attach          Display or set agent attachment at app level
-  agents          Display installed agents
+  agents          Display and manage agents
   agent-injector  Agent Injector status
-  config          Get configuration settings
+  apps            List discovered application details
+  app-agent       Set agent versions pinned to specific applications
+  attach          Display or set agent attachment at app level
+  auto-attach     Display or set the auto-attach status
+  agent-config    Manage configuration settings for language agents and individual applications
+  config          Manage configuration settings for Contrast Flex
+  monitor         Monitors running applications
   help            Print this message or the help of the given subcommand(s)
 
 Options:
@@ -263,34 +274,6 @@ contrast-flex-agent/
     ├── dotnet-app/           # ASP.NET Core application
     └── apache-tomcat-9.0.95/ # Apache Tomcat application
 ```
-
-## 🎯 Demo Workflow
-
-### 1. Initial Setup
-```bash
-git clone <repository-url>
-cd contrast-flex-agent
-./run-demo.sh [your-agent-token]
-```
-
-### 2. Start Applications
-```bash
-# Inside the container
-./demo-control.sh all start
-```
-
-### 3. Test Vulnerabilities
-Visit each application and test the intentional vulnerabilities:
-- http://localhost:9090 (Python Flask)
-- http://localhost:3030 (Node.js Express)
-- http://localhost:8181 (.NET Core)  
-- http://localhost:8080 (Apache Tomcat)
-
-### 4. Monitor in Contrast TeamServer
-Watch real-time vulnerability detection and attack monitoring in your Contrast dashboard.
-
-### 5. Demonstrate Protection
-Show how Contrast can block attacks in real-time.
 
 ## 🛟 Troubleshooting
 
